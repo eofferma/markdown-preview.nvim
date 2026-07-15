@@ -97,14 +97,29 @@ function! mkdp#rpc#get_server_status() abort
   return 1
 endfunction
 
-function! mkdp#rpc#preview_refresh() abort
+function! s:get_active_line_range() abort
+  if mode() !=# 'V'
+    return v:null
+  endif
+
+  let l:start = line('v')
+  let l:end = line('.')
+  return [min([l:start, l:end]), max([l:start, l:end])]
+endfunction
+
+function! mkdp#rpc#preview_refresh(...) abort
+  let l:refresh_params = {
+        \ 'bufnr': bufnr('%'),
+        \ 'activeLineRange': a:0 ? a:1 : s:get_active_line_range(),
+        \}
+
   if s:is_vim
     if s:mkdp_channel_id !=# v:null
-      call mkdp#rpc#notify(s:mkdp_channel_id, 'refresh_content', { 'bufnr': bufnr('%') })
+      call mkdp#rpc#notify(s:mkdp_channel_id, 'refresh_content', l:refresh_params)
     endif
   else
     if s:mkdp_channel_id !=# -1
-      call rpcnotify(s:mkdp_channel_id, 'refresh_content', { 'bufnr': bufnr('%') })
+      call rpcnotify(s:mkdp_channel_id, 'refresh_content', l:refresh_params)
     endif
   endif
 endfunction

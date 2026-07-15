@@ -16,6 +16,10 @@ function getAttrTag (line) {
   return `[data-source-line="${line}"]`
 }
 
+function getElementPageTop (ele) {
+  return ele.getBoundingClientRect().top + window.pageYOffset
+}
+
 function getPreLineOffsetTop (line) {
   let currentLine = line - 1
   let ele = null
@@ -27,7 +31,7 @@ function getPreLineOffsetTop (line) {
   }
   return [
     currentLine >= 0 ? currentLine : 0,
-    ele ? ele.offsetTop : 0
+    ele ? getElementPageTop(ele) : 0
   ]
 }
 
@@ -42,7 +46,7 @@ function getNextLineOffsetTop (line, len) {
   }
   return [
     currentLine < len ? currentLine : len - 1,
-    ele ? ele.offsetTop : document.documentElement.scrollHeight
+    ele ? getElementPageTop(ele) : document.documentElement.scrollHeight
   ]
 }
 
@@ -58,7 +62,7 @@ function relativeScroll (line, ratio, len) {
   let offsetTop = 0
   const lineEle = document.querySelector(`[data-source-line="${line}"]`)
   if (lineEle) {
-    offsetTop = lineEle.offsetTop
+    offsetTop = getElementPageTop(lineEle)
   } else {
     const pre = getPreLineOffsetTop(line)
     const next = getNextLineOffsetTop(line, len)

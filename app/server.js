@@ -38,7 +38,7 @@ exports.run = function () {
       .filter(line => Number.isFinite(line) && line > 0)
 
     if (!lines.length) {
-      return [1, 1]
+      return null
     }
 
     return [Math.min(...lines), Math.max(...lines)]
@@ -46,12 +46,12 @@ exports.run = function () {
 
   const getActiveLineRange = async (cursor) => {
     const mode = await plugin.nvim.call('mode')
-    if (['v', 'V', '\u0016'].includes(String(mode))) {
+    if (String(mode) === 'V') {
       const visualStart = await plugin.nvim.call('getpos', 'v')
       return lineRangeFromPositions(visualStart, cursor)
     }
 
-    return lineRangeFromPositions(cursor)
+    return null
   }
 
   // http server

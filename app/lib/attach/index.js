@@ -9,7 +9,7 @@ function lineRangeFromPositions(...positions) {
         .map(position => Number(position && position[1]))
         .filter(line => Number.isFinite(line) && line > 0);
     if (!lines.length) {
-        return [1, 1];
+        return null;
     }
     return [Math.min(...lines), Math.max(...lines)];
 }
@@ -25,10 +25,12 @@ function default_1(options) {
             const currentWindow = yield nvim.window;
             const winheight = yield nvim.call('winheight', currentWindow.id);
             const cursor = yield nvim.call('getpos', '.');
-            const mode = yield nvim.call('mode');
-            const activeLineRange = ['v', 'V', '\u0016'].includes(String(mode))
-                ? lineRangeFromPositions(yield nvim.call('getpos', 'v'), cursor)
-                : lineRangeFromPositions(cursor);
+            const hasActiveLineRange = Object.prototype.hasOwnProperty.call(opts, 'activeLineRange');
+            const activeLineRange = hasActiveLineRange
+                ? opts.activeLineRange
+                : (String(yield nvim.call('mode')) === 'V'
+                    ? lineRangeFromPositions(yield nvim.call('getpos', 'v'), cursor)
+                    : null);
             const renderOpts = yield nvim.getVar('mkdp_preview_options');
             const pageTitle = yield nvim.getVar('mkdp_page_title');
             const theme = yield nvim.getVar('mkdp_theme');

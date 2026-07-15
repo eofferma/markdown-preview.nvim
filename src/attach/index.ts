@@ -29,13 +29,13 @@ interface IPlugin {
 
 let app: IApp
 
-function lineRangeFromPositions(...positions: any[]): [number, number] {
+function lineRangeFromPositions(...positions: any[]): [number, number] | null {
   const lines = positions
     .map(position => Number(position && position[1]))
     .filter(line => Number.isFinite(line) && line > 0)
 
   if (!lines.length) {
-    return [1, 1]
+    return null
   }
 
   return [Math.min(...lines), Math.max(...lines)]
@@ -54,10 +54,14 @@ export default function(options: Attach): IPlugin {
       const currentWindow = await nvim.window
       const winheight = await nvim.call('winheight', currentWindow.id)
       const cursor = await nvim.call('getpos', '.')
-      const mode = await nvim.call('mode')
-      const activeLineRange = ['v', 'V', '\u0016'].includes(String(mode))
-        ? lineRangeFromPositions(await nvim.call('getpos', 'v'), cursor)
-        : lineRangeFromPositions(cursor)
+      const hasActiveLineRange = Object.prototype.hasOwnProperty.call(opts, 'activeLineRange')
+      const activeLineRange = hasActiveLineRange
+        ? opts.activeLineRange
+        : (
+          String(await nvim.call('mode')) === 'V'
+            ? lineRangeFromPositions(await nvim.call('getpos', 'v'), cursor)
+            : null
+        )
       const renderOpts = await nvim.getVar('mkdp_preview_options')
       const pageTitle = await nvim.getVar('mkdp_page_title')
       const theme = await nvim.getVar('mkdp_theme')

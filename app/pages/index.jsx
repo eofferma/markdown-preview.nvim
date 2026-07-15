@@ -89,7 +89,15 @@ function applySourceLineHighlight(range) {
 
   document.querySelectorAll('[data-source-line]').forEach((node) => {
     const sourceLine = Number(node.getAttribute('data-source-line'))
-    if (Number.isFinite(sourceLine) && sourceLine >= startLine && sourceLine <= endLine) {
+    const sourceLineEnd = Number(node.getAttribute('data-source-line-end'))
+    const sourceEndLine = Number.isFinite(sourceLineEnd) ? sourceLineEnd : sourceLine
+    const startsInSelection = sourceLine >= startLine && sourceLine <= endLine
+    const tableRowIntersectsSelection = (
+      node.tagName === 'TR' &&
+      sourceLine <= endLine &&
+      sourceEndLine >= startLine
+    )
+    if (Number.isFinite(sourceLine) && (startsInSelection || tableRowIntersectsSelection)) {
       node.classList.add('mkdp-source-line-active')
       if (!firstHighlighted) {
         firstHighlighted = node
@@ -388,6 +396,10 @@ export default class PreviewPage extends React.Component {
               border-radius: 4px;
               box-shadow: 0 0 0 4px rgba(255, 212, 0, 0.16);
               transition: background 120ms ease, box-shadow 120ms ease;
+            }
+            .markdown-body tr.mkdp-source-line-active > th,
+            .markdown-body tr.mkdp-source-line-active > td {
+              background: rgba(255, 212, 0, 0.22);
             }
           `}</style>
         </Head>

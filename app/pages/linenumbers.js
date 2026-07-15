@@ -14,6 +14,7 @@ export default function injectLinenumbersPlugin (md) {
       line = tokens[idx].map[0]
       tokens[idx].attrJoin('class', 'source-line')
       tokens[idx].attrSet('data-source-line', String(line))
+      tokens[idx].attrSet('data-source-line-end', String(Math.max(line, tokens[idx].map[1] - 1)))
     }
     return slf.renderToken(tokens, idx, options, env, slf)
   }
@@ -22,5 +23,5 @@ export default function injectLinenumbersPlugin (md) {
   md.renderer.rules.heading_open = injectLineNumbers
   md.renderer.rules.list_item_open = injectLineNumbers
   md.renderer.rules.table_open = injectLineNumbers
+  md.renderer.rules.tr_open = injectLineNumbers
 }
-
