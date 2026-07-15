@@ -74,6 +74,37 @@ const DEFAULT_OPTIONS = {
   }
 }
 
+function applySourceLineHighlight(range) {
+  document.querySelectorAll('.mkdp-source-line-active').forEach((node) => {
+    node.classList.remove('mkdp-source-line-active')
+  })
+
+  if (!range || range.length < 2) {
+    return
+  }
+
+  const startLine = Math.max(0, Math.min(range[0], range[1]) - 1)
+  const endLine = Math.max(0, Math.max(range[0], range[1]) - 1)
+  let firstHighlighted = null
+
+  document.querySelectorAll('[data-source-line]').forEach((node) => {
+    const sourceLine = Number(node.getAttribute('data-source-line'))
+    if (Number.isFinite(sourceLine) && sourceLine >= startLine && sourceLine <= endLine) {
+      node.classList.add('mkdp-source-line-active')
+      if (!firstHighlighted) {
+        firstHighlighted = node
+      }
+    }
+  })
+
+  if (!firstHighlighted) {
+    const fallback = document.querySelector(`[data-source-line="${startLine}"]`)
+    if (fallback) {
+      fallback.classList.add('mkdp-source-line-active')
+    }
+  }
+}
+
 export default class PreviewPage extends React.Component {
   constructor(props) {
     super(props)
@@ -174,6 +205,7 @@ export default class PreviewPage extends React.Component {
     winline,
     winheight,
     cursor,
+    activeLineRange,
     pageTitle = '',
     theme,
     name = '',
@@ -264,6 +296,7 @@ export default class PreviewPage extends React.Component {
           len: content.length
         })
       }
+      applySourceLineHighlight(activeLineRange)
     }
 
     const refreshRender = () => {
@@ -349,6 +382,14 @@ export default class PreviewPage extends React.Component {
           <script type="text/javascript" src="/_static/flowchart@1.13.0.min.js"></script>
           <script type="text/javascript" src="/_static/viz.js"></script>
           <script type="text/javascript" src="/_static/full.render.js"></script>
+          <style>{`
+            .markdown-body .mkdp-source-line-active {
+              background: rgba(255, 212, 0, 0.22);
+              border-radius: 4px;
+              box-shadow: 0 0 0 4px rgba(255, 212, 0, 0.16);
+              transition: background 120ms ease, box-shadow 120ms ease;
+            }
+          `}</style>
         </Head>
         <main data-theme={this.state.theme}>
           <div id="page-ctn" contentEditable={contentEditable ? 'true' : 'false'}>

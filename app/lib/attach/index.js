@@ -4,6 +4,15 @@ const tslib_1 = require("tslib");
 const neovim_1 = require("@chemzqm/neovim");
 const logger = require('../util/logger')('attach'); // tslint:disable-line
 let app;
+function lineRangeFromPositions(...positions) {
+    const lines = positions
+        .map(position => Number(position && position[1]))
+        .filter(line => Number.isFinite(line) && line > 0);
+    if (!lines.length) {
+        return [1, 1];
+    }
+    return [Math.min(...lines), Math.max(...lines)];
+}
 function default_1(options) {
     const nvim = (0, neovim_1.attach)(options);
     nvim.on('notification', (method, args) => tslib_1.__awaiter(this, void 0, void 0, function* () {
@@ -16,6 +25,10 @@ function default_1(options) {
             const currentWindow = yield nvim.window;
             const winheight = yield nvim.call('winheight', currentWindow.id);
             const cursor = yield nvim.call('getpos', '.');
+            const mode = yield nvim.call('mode');
+            const activeLineRange = ['v', 'V', '\u0016'].includes(String(mode))
+                ? lineRangeFromPositions(yield nvim.call('getpos', 'v'), cursor)
+                : lineRangeFromPositions(cursor);
             const renderOpts = yield nvim.getVar('mkdp_preview_options');
             const pageTitle = yield nvim.getVar('mkdp_page_title');
             const theme = yield nvim.getVar('mkdp_theme');
@@ -30,6 +43,7 @@ function default_1(options) {
                     winline,
                     winheight,
                     cursor,
+                    activeLineRange,
                     pageTitle,
                     theme,
                     name,

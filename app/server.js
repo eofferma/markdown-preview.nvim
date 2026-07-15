@@ -32,6 +32,28 @@ exports.run = function () {
     }
   }
 
+  const lineRangeFromPositions = (...positions) => {
+    const lines = positions
+      .map(position => Number(position && position[1]))
+      .filter(line => Number.isFinite(line) && line > 0)
+
+    if (!lines.length) {
+      return [1, 1]
+    }
+
+    return [Math.min(...lines), Math.max(...lines)]
+  }
+
+  const getActiveLineRange = async (cursor) => {
+    const mode = await plugin.nvim.call('mode')
+    if (['v', 'V', '\u0016'].includes(String(mode))) {
+      const visualStart = await plugin.nvim.call('getpos', 'v')
+      return lineRangeFromPositions(visualStart, cursor)
+    }
+
+    return lineRangeFromPositions(cursor)
+  }
+
   // http server
   const server = http.createServer(async (req, res) => {
     // plugin
@@ -69,6 +91,7 @@ exports.run = function () {
         const currentWindow = await plugin.nvim.window
         const winheight = await plugin.nvim.call('winheight', currentWindow.id)
         const cursor = await plugin.nvim.call('getpos', '.')
+        const activeLineRange = await getActiveLineRange(cursor)
         const options = await plugin.nvim.getVar('mkdp_preview_options')
         const pageTitle = await plugin.nvim.getVar('mkdp_page_title')
         const theme = await plugin.nvim.getVar('mkdp_theme')
@@ -81,6 +104,7 @@ exports.run = function () {
           winline,
           winheight,
           cursor,
+          activeLineRange,
           pageTitle,
           theme,
           name,
