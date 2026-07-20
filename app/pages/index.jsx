@@ -113,6 +113,39 @@ function applySourceLineHighlight(range) {
   }
 }
 
+function applyCursorLine(line) {
+  document.querySelectorAll('.mkdp-cursor-line').forEach((node) => {
+    node.classList.remove('mkdp-cursor-line')
+  })
+
+  if (!line || !Number.isFinite(Number(line))) {
+    return
+  }
+
+  const cursorLine = Math.max(0, Number(line) - 1)
+  let target = null
+  let fallback = null
+
+  document.querySelectorAll('[data-source-line]').forEach((node) => {
+    const sourceLine = Number(node.getAttribute('data-source-line'))
+    const sourceLineEnd = Number(node.getAttribute('data-source-line-end'))
+    if (!Number.isFinite(sourceLine)) {
+      return
+    }
+    const endLine = Number.isFinite(sourceLineEnd) ? sourceLineEnd : sourceLine
+    if (sourceLine <= cursorLine && cursorLine <= endLine) {
+      target = target || node
+    } else if (sourceLine < cursorLine) {
+      fallback = node
+    }
+  })
+
+  const node = target || fallback
+  if (node) {
+    node.classList.add('mkdp-cursor-line')
+  }
+}
+
 export default class PreviewPage extends React.Component {
   constructor(props) {
     super(props)
@@ -305,6 +338,7 @@ export default class PreviewPage extends React.Component {
         })
       }
       applySourceLineHighlight(activeLineRange)
+      applyCursorLine(activeLineRange && activeLineRange.length >= 2 ? null : cursor && cursor[1])
     }
 
     const refreshRender = () => {
@@ -400,6 +434,17 @@ export default class PreviewPage extends React.Component {
             .markdown-body tr.mkdp-source-line-active > th,
             .markdown-body tr.mkdp-source-line-active > td {
               background: rgba(255, 212, 0, 0.22);
+            }
+            .markdown-body .mkdp-cursor-line {
+              border-left: 3px solid #1e88e5;
+              padding-left: 6px;
+              margin-left: -9px;
+              background: rgba(30, 136, 229, 0.08);
+              transition: background 120ms ease;
+            }
+            .markdown-body tr.mkdp-cursor-line > th,
+            .markdown-body tr.mkdp-cursor-line > td {
+              background: rgba(30, 136, 229, 0.08);
             }
           `}</style>
         </Head>
